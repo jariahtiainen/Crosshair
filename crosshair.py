@@ -13,36 +13,47 @@ class CrosshairWidget(QWidget):
         self.gap = settings.get('gap', 5)
         self.shape = settings.get('shape', 'Cross')
         self.color = QColor(settings.get('color', '#FF0000'))
+        
+        # Initially set to (0, 0), positions will be updated after the widget is shown
+        self.x_position = settings.get('x_position', 0)
+        self.y_position = settings.get('y_position', 0)
+        
         self.initUI()
 
     def initUI(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint | Qt.Tool)
         self.setAttribute(Qt.WA_TranslucentBackground)
         self.showFullScreen()
+        
+        # Ensure the crosshair is drawn in the correct position after the widget is shown
+        QTimer.singleShot(0, self.center_crosshair)
+
         self.ensure_on_top_timer = QTimer()
         self.ensure_on_top_timer.timeout.connect(self.ensure_on_top)
         self.ensure_on_top_timer.start(10000)  # Ensure on top every second
+
+    def center_crosshair(self):
+        # Update x_position and y_position once the widget dimensions are available
+        if self.x_position == 0:
+            self.x_position = self.width() // 2
+        if self.y_position == 0:
+            self.y_position = self.height() // 2
 
     def paintEvent(self, event):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
         pen = QPen(self.color, 2)
         painter.setPen(pen)
-
-        width = self.width()
-        height = self.height()
-        
-        # Draw crosshair with gap in the middle
         gap_half = self.gap // 2
         size_half = self.size // 2
 
         if self.shape == 'Cross':
             # Horizontal line
-            painter.drawLine(width // 2 - size_half, height // 2, width // 2 - gap_half, height // 2)
-            painter.drawLine(width // 2 + gap_half, height // 2, width // 2 + size_half, height // 2)
+            painter.drawLine(self.x_position - size_half, self.y_position, self.x_position - gap_half, self.y_position)
+            painter.drawLine(self.x_position + gap_half, self.y_position, self.x_position + size_half, self.y_position)
             # Vertical line
-            painter.drawLine(width // 2, height // 2 - size_half, width // 2, height // 2 - gap_half)
-            painter.drawLine(width // 2, height // 2 + gap_half, width // 2, height // 2 + size_half)
+            painter.drawLine(self.x_position, self.y_position - size_half, self.x_position, self.y_position - gap_half)
+            painter.drawLine(self.x_position, self.y_position + gap_half, self.x_position, self.y_position + size_half)
 
     def update_color(self, color):
         self.color = color
@@ -60,6 +71,11 @@ class CrosshairWidget(QWidget):
         self.shape = shape
         self.update()
 
+    def update_position(self, x, y):
+        self.x_position = x
+        self.y_position = y
+        self.update()
+
     def ensure_on_top(self):
         hwnd = self.winId()
         win32gui.SetWindowPos(int(hwnd), win32con.HWND_TOPMOST, 0, 0, 0, 0, win32con.SWP_NOMOVE | win32con.SWP_NOSIZE)
@@ -73,6 +89,27 @@ class CustomizationWindow(QWidget):
 
     def initUI(self):
         layout = QVBoxLayout()
+
+        # Position controls for X and Y
+        pos_layout_x = QHBoxLayout()
+        self.pos_label_x = QLabel('X Position:')
+        pos_layout_x.addWidget(self.pos_label_x)
+        self.pos_slider_x = QSlider(Qt.Horizontal)
+        self.pos_slider_x.setRange(0, self.crosshair_widget.width())
+        self.pos_slider_x.setValue(self.crosshair_widget.x_position)
+        self.pos_slider_x.valueChanged.connect(self.update_x_position)
+        pos_layout_x.addWidget(self.pos_slider_x)
+        layout.addLayout(pos_layout_x)
+
+        pos_layout_y = QHBoxLayout()
+        self.pos_label_y = QLabel('Y Position:')
+        pos_layout_y.addWidget(self.pos_label_y)
+        self.pos_slider_y = QSlider(Qt.Horizontal)
+        self.pos_slider_y.setRange(0, self.crosshair_widget.height())
+        self.pos_slider_y.setValue(self.crosshair_widget.y_position)
+        self.pos_slider_y.valueChanged.connect(self.update_y_position)
+        pos_layout_y.addWidget(self.pos_slider_y)
+        layout.addLayout(pos_layout_y)
 
         # Title
         self.setWindowTitle('Crosshair Customization')
@@ -175,6 +212,14 @@ class CustomizationWindow(QWidget):
         
         self.show()
 
+    def update_x_position(self, x):
+        self.crosshair_widget.update_position(x, self.crosshair_widget.y_position)
+        self.settings['x_position'] = x
+
+    def update_y_position(self, y):
+        self.crosshair_widget.update_position(self.crosshair_widget.x_position, y)
+        self.settings['y_position'] = y
+
     def select_color(self):
         color = QColorDialog.getColor()
         if color.isValid():
@@ -207,7 +252,14 @@ class CustomizationWindow(QWidget):
 
 def load_settings():
     # Placeholder for actual settings loading logic
-    return {'size': 10, 'gap': 5, 'shape': 'Cross', 'color': '#FF0000'}
+    return {
+        'size': 10,
+        'gap': 5,
+        'shape': 'Cross',
+        'color': '#FF0000',
+        'x_position': 500,  # Example default x position
+        'y_position': 500   # Example default y position
+    }
 
 def save_settings(settings):
     # Placeholder for actual settings saving logic
