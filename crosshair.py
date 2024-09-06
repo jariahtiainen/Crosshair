@@ -120,6 +120,13 @@ class CustomizationWindow(QWidget):
         pos_layout_y.addWidget(self.pos_slider_y)
         layout.addLayout(pos_layout_y)
 
+        # Create the Center Crosshair button
+        center_button = QPushButton('Center Crosshair')
+        center_button.clicked.connect(self.center_crosshair)
+
+        # Add the button to the layout
+        layout.addWidget(center_button)
+
         # Title
         self.setWindowTitle('Crosshair')
         self.setWindowIcon(QIcon('icon.png'))  # Set a custom icon if available
@@ -228,6 +235,22 @@ class CustomizationWindow(QWidget):
     def update_y_position(self, y):
         self.crosshair_widget.update_position(self.crosshair_widget.x_position, y)
         self.settings['y_position'] = y
+
+    def center_crosshair(self):
+        # Calculate the center of the screen
+        center_x = self.crosshair_widget.width() // 2
+        center_y = self.crosshair_widget.height() // 2
+    
+        # Update the crosshair position
+        self.crosshair_widget.update_position(center_x, center_y)
+    
+        # Update the sliders to reflect the centered position
+        self.pos_slider_x.setValue(center_x)
+        self.pos_slider_y.setValue(center_y)
+    
+        # Store the updated values in settings
+        self.settings['x_position'] = center_x
+        self.settings['y_position'] = center_y
 
     def select_color(self):
         color = QColorDialog.getColor()
