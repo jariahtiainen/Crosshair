@@ -5,6 +5,11 @@ from PyQt5.QtCore import Qt, QTimer
 import win32api
 import win32con
 import win32gui
+import json
+import os
+
+SETTINGS_FILE = 'crosshair_settings.json'
+
 
 class CrosshairWidget(QWidget):
     def __init__(self, settings):
@@ -116,7 +121,7 @@ class CustomizationWindow(QWidget):
         layout.addLayout(pos_layout_y)
 
         # Title
-        self.setWindowTitle('Crosshair Customization')
+        self.setWindowTitle('Crosshair')
         self.setWindowIcon(QIcon('icon.png'))  # Set a custom icon if available
         
         # Apply stylesheet
@@ -255,7 +260,9 @@ class CustomizationWindow(QWidget):
         self.settings['shape'] = shape
 
 def load_settings():
-    # Placeholder for actual settings loading logic
+    if os.path.exists(SETTINGS_FILE):
+        with open(SETTINGS_FILE, 'r') as file:
+            return json.load(file)
     return {
         'size': 10,
         'gap': 5,
@@ -266,23 +273,26 @@ def load_settings():
     }
 
 def save_settings(settings):
-    # Placeholder for actual settings saving logic
+    with open(SETTINGS_FILE, 'w') as file:
+        json.dump(settings, file)
     print("Settings saved:", settings)
 
 def main():
     app = QApplication(sys.argv)
+
     settings = load_settings()
+    if settings is None:
+        settings = {'color': '#FF0000', 'size': 10, 'shape': 'Circle'}
+
     crosshair = CrosshairWidget(settings)
     customization_window = CustomizationWindow(crosshair, settings)
     
-    app.exec_()
-    save_settings(settings)
+    def on_exit():
+        save_settings(settings)
+    
+    app.aboutToQuit.connect(on_exit)
+    
+    sys.exit(app.exec_())
 
 if __name__ == '__main__':
     main()
-
-
-
-
-
-
