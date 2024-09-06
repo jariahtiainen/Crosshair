@@ -55,6 +55,10 @@ class CrosshairWidget(QWidget):
             painter.drawLine(self.x_position, self.y_position - size_half, self.x_position, self.y_position - gap_half)
             painter.drawLine(self.x_position, self.y_position + gap_half, self.x_position, self.y_position + size_half)
 
+        elif self.shape == 'Circle':
+            # Draw a circle with the center at (self.x_position, self.y_position)
+            painter.drawEllipse(self.x_position - size_half, self.y_position - size_half, self.size, self.size)
+
     def update_color(self, color):
         self.color = color
         self.update()
