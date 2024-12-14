@@ -108,16 +108,31 @@ class CustomizationWindow(QWidget):
         self.pos_slider_x.setValue(self.crosshair_widget.x_position)
         self.pos_slider_x.valueChanged.connect(self.update_x_position)
         pos_layout_x.addWidget(self.pos_slider_x)
+
+        self.pos_spinbox_x = QSpinBox()
+        self.pos_spinbox_x.setRange(0, self.crosshair_widget.width())
+        self.pos_spinbox_x.setValue(self.crosshair_widget.x_position)
+        self.pos_spinbox_x.valueChanged.connect(self.update_x_position_from_spinbox)
+        pos_layout_x.addWidget(self.pos_spinbox_x)
+
         layout.addLayout(pos_layout_x)
 
         pos_layout_y = QHBoxLayout()
         self.pos_label_y = QLabel('Y Position:')
         pos_layout_y.addWidget(self.pos_label_y)
+
         self.pos_slider_y = QSlider(Qt.Horizontal)
         self.pos_slider_y.setRange(0, self.crosshair_widget.height())
         self.pos_slider_y.setValue(self.crosshair_widget.y_position)
         self.pos_slider_y.valueChanged.connect(self.update_y_position)
         pos_layout_y.addWidget(self.pos_slider_y)
+
+        self.pos_spinbox_y = QSpinBox()
+        self.pos_spinbox_y.setRange(0, self.crosshair_widget.height())
+        self.pos_spinbox_y.setValue(self.crosshair_widget.y_position)
+        self.pos_spinbox_y.valueChanged.connect(self.update_y_position_from_spinbox)
+        pos_layout_y.addWidget(self.pos_spinbox_y)
+
         layout.addLayout(pos_layout_y)
 
         # Create the Center Crosshair button
@@ -227,6 +242,27 @@ class CustomizationWindow(QWidget):
         self.resize(400, 300)  # Width: 400px, Height: 300px
         
         self.show()
+
+    def update_x_position_from_slider(self, x):
+        self.pos_spinbox_x.setValue(x)  # Update spinbox when slider changes
+        self.crosshair_widget.update_position(x, self.crosshair_widget.y_position)
+        self.settings['x_position'] = x
+
+    def update_x_position_from_spinbox(self, x):
+        self.pos_slider_x.setValue(x)  # Update slider when spinbox changes
+        self.crosshair_widget.update_position(x, self.crosshair_widget.y_position)
+        self.settings['x_position'] = x
+
+    def update_y_position_from_slider(self, y):
+        self.pos_spinbox_y.setValue(y)  # Update spinbox when slider changes
+        self.crosshair_widget.update_position(self.crosshair_widget.x_position, y)
+        self.settings['y_position'] = y
+
+    def update_y_position_from_spinbox(self, y):
+        self.pos_slider_y.setValue(y)  # Update slider when spinbox changes
+        self.crosshair_widget.update_position(self.crosshair_widget.x_position, y)
+        self.settings['y_position'] = y
+
 
     def update_x_position(self, x):
         self.crosshair_widget.update_position(x, self.crosshair_widget.y_position)
